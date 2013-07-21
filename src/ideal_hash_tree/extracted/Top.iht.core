@@ -1,0 +1,548 @@
+module 'Top.iht' [ 'iht.K_rect'/2, 'iht.K_rec'/2, 'iht.V_rect'/2, 'iht.V_rec'/2, 'iht.int_of_nat'/1, 'iht.tup_get'/3, 'iht.tup_tcons'/3, 'iht.prim_addr_rect'/2, 'iht.prim_addr_rec'/2, 'iht.pa_eq_dec'/2, 'iht.hash'/1, 'iht.hash_tree_rect'/6, 'iht.hash_tree_rec'/6, 'iht.internal_eq_rew_dep'/3, 'iht.prim_get'/5, 'iht.updated_hash_tree_rect'/7, 'iht.updated_hash_tree_rec'/7, 'iht.collides_rect'/3, 'iht.collides_rec'/3, 'iht.set_args_rect'/2, 'iht.set_args_rec'/2, 'iht.d'/1, 'iht.loc'/1, 'iht.k'/1, 'iht.v'/1, 'iht.h'/1, 'iht.ht'/1, 'iht.prim_set_obligation_1'/2, 'iht.prim_set_obligation_2'/2, 'iht.prim_set_obligation_6'/4, 'iht.prim_set_obligation_7'/4, 'iht.prim_set_obligation_13'/5, 'iht.prim_set_obligation_14'/5, 'iht.prim_set_obligation_16'/5, 'iht.prim_set_obligation_17'/5, 'iht.prim_set_obligation_25'/3, 'iht.prim_set_obligation_26'/3, 'iht.prim_set_obligation_28'/3, 'iht.prim_set'/1, 'iht.get'/2, 'iht.set'/3 ] attributes [ ] 
+
+
+% erlang~=:= => erlang~=:=
+'iht.K_rect'/2 = fun (_f, _k0) -> 
+  apply _f
+        ( 'dummy'
+        , _k0
+        )
+'iht.K_rec'/2 = fun (_f, _k0) -> 
+  apply _f
+        ( 'dummy'
+        , _k0
+        )
+'iht.V_rect'/2 = fun (_f, _v0) -> 
+  apply _f
+        ( 'dummy'
+        , _v0
+        )
+'iht.V_rec'/2 = fun (_f, _v0) -> 
+  apply _f
+        ( 'dummy'
+        , _v0
+        )
+% erlang~=:= => erlang~=:=
+% erlang~=:= => erlang~=:=
+% 0 => 0
+% 1 => 1
+% 2 => 2
+% erlang~- => erlang~-
+% erlang~+ => erlang~+
+% erlang~- => erlang~-
+% erlang~* => erlang~*
+'iht.int_of_nat'/1 = fun (_z) -> 
+  case _z of
+    'O' when 'true' ->
+        0
+    {'S', _n} when 'true' ->
+        call 'erlang':'+'
+             ( 1
+             , call 'Top.iht':'iht.int_of_nat' (_n)
+             )
+   end
+% erlang~element => erlang~element
+'iht.tup_get'/3 = fun (_sz, _tup, _q) -> 
+  call 'erlang':'element'
+       ( call 'Top.iht':'iht.int_of_nat' ({'S', _q})
+       , _tup
+       )
+% erlang~append_element => erlang~append_element
+'iht.tup_tcons'/3 = fun (_sz, _tup, _a) -> 
+  call 'erlang':'append_element'
+       ( _tup
+       , _a
+       )
+'iht.prim_addr_rect'/2 = fun (_f, _p) -> 
+  apply _f (_p)
+'iht.prim_addr_rec'/2 = fun (_f, _p) -> 
+  apply _f (_p)
+'iht.pa_eq_dec'/2 = fun (_a, _b) -> 
+  call 'erlang':'=:='
+       ( _a
+       , _b
+       )
+% erlang~phash2 => erlang~phash2
+% erlang~integer_to_list => erlang~integer_to_list
+% erlang~md5 => erlang~md5
+% erlang~binary_to_list => erlang~binary_to_list
+% erlang~list_to_tuple => erlang~list_to_tuple
+'iht.hash'/1 = fun (_k0) -> 
+  let _ph = 
+    call 'erlang':'phash2' (_k0)
+  in let _l = 
+       call 'erlang':'integer_to_list' (_ph)
+     in let _m = 
+          call 'erlang':'md5' (_l)
+        in let _b = 
+             call 'erlang':'binary_to_list' (_m)
+           in call 'erlang':'list_to_tuple' (_b)
+% {} => {}
+'iht.hash_tree_rect'/6 = fun (_f, _f0, _f1, _d0, _loc0, _h0) -> 
+  case _h0 of
+    'ht_none' when 'true' ->
+        apply _f
+              ( _d0
+              , _loc0
+              )
+    { 'ht_pair'
+    , _v0
+    , _k0
+    } when 'true' ->
+        apply _f0
+              ( _d0
+              , _loc0
+              , _v0
+              , _k0
+              , 'dummy'
+              , 'dummy'
+              )
+    {'ht_bran', _h1} when 'true' ->
+        apply _f1
+              ( _d0
+              , _loc0
+              , _h1
+              , fun (_a) -> 
+                  call 'Top.iht':'iht.hash_tree_rect'
+                       ( _f
+                       , _f0
+                       , _f1
+                       , {'S', _d0}
+                       , call 'Top.iht':'iht.tup_tcons'
+                              ( _d0
+                              , _loc0
+                              , _a
+                              )
+                       , apply _h1 (_a)
+                       )
+              , 'dummy'
+              )
+   end
+'iht.hash_tree_rec'/6 = fun (_f, _f0, _f1, _d0, _loc0, _h0) -> 
+  case _h0 of
+    'ht_none' when 'true' ->
+        apply _f
+              ( _d0
+              , _loc0
+              )
+    { 'ht_pair'
+    , _v0
+    , _k0
+    } when 'true' ->
+        apply _f0
+              ( _d0
+              , _loc0
+              , _v0
+              , _k0
+              , 'dummy'
+              , 'dummy'
+              )
+    {'ht_bran', _h1} when 'true' ->
+        apply _f1
+              ( _d0
+              , _loc0
+              , _h1
+              , fun (_a) -> 
+                  call 'Top.iht':'iht.hash_tree_rec'
+                       ( _f
+                       , _f0
+                       , _f1
+                       , {'S', _d0}
+                       , call 'Top.iht':'iht.tup_tcons'
+                              ( _d0
+                              , _loc0
+                              , _a
+                              )
+                       , apply _h1 (_a)
+                       )
+              , 'dummy'
+              )
+   end
+'iht.internal_eq_rew_dep'/3 = fun (_x, _f, _y) -> 
+  _f
+'iht.prim_get'/5 = fun (_d0, _loc0, _ht0, _k0, _h0) -> 
+  case _ht0 of
+    'ht_none' when 'true' ->
+        'None'
+    { 'ht_pair'
+    , _v@
+    , _k@
+    } when 'true' ->
+        case call 'erlang':'=:='
+                  ( _k0
+                  , _v@
+                  ) of
+          'true' when 'true' ->
+              {'Some', _k@}
+          'false' when 'true' ->
+              'None'
+         end
+    {'ht_bran', _f} when 'true' ->
+        call 'Top.iht':'iht.prim_get'
+             ( {'S', _d0}
+             , call 'Top.iht':'iht.tup_tcons'
+                    ( _d0
+                    , _loc0
+                    , call 'Top.iht':'iht.tup_get'
+                           ( {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', 'O'}}}}}}}}}}}}}}}}
+                           , _h0
+                           , _d0
+                           )
+                    )
+             , apply _f (call 'Top.iht':'iht.tup_get'
+                      ( {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', 'O'}}}}}}}}}}}}}}}}
+                      , _h0
+                      , _d0
+                      ))
+             , _k0
+             , _h0
+             )
+   end
+'iht.updated_hash_tree_rect'/7 = fun (_d0, _loc0, _ht0, _k0, _v0, _f, _u) -> 
+  apply _f
+        ( _u
+        , 'dummy'
+        )
+'iht.updated_hash_tree_rec'/7 = fun (_d0, _loc0, _ht0, _k0, _v0, _f, _u) -> 
+  apply _f
+        ( _u
+        , 'dummy'
+        )
+'iht.collides_rect'/3 = fun (_k0, _f, _c) -> 
+  apply _f
+        ( _c
+        , 'dummy'
+        , 'dummy'
+        )
+'iht.collides_rec'/3 = fun (_k0, _f, _c) -> 
+  apply _f
+        ( _c
+        , 'dummy'
+        , 'dummy'
+        )
+'iht.set_args_rect'/2 = fun (_f, _s) -> 
+  case _s of
+    { 'mk_set_args'
+    , _x
+    , _x0
+    , _x1
+    , _x2
+    , _x3
+    , _x4
+    } when 'true' ->
+        apply _f
+              ( _x
+              , _x0
+              , _x1
+              , _x2
+              , _x3
+              , 'dummy'
+              , 'dummy'
+              , 'dummy'
+              , _x4
+              )
+   end
+'iht.set_args_rec'/2 = fun (_f, _s) -> 
+  case _s of
+    { 'mk_set_args'
+    , _x
+    , _x0
+    , _x1
+    , _x2
+    , _x3
+    , _x4
+    } when 'true' ->
+        apply _f
+              ( _x
+              , _x0
+              , _x1
+              , _x2
+              , _x3
+              , 'dummy'
+              , 'dummy'
+              , 'dummy'
+              , _x4
+              )
+   end
+'iht.d'/1 = fun (_s) -> 
+  case _s of
+    { 'mk_set_args'
+    , _ht0
+    , _h0
+    , _v0
+    , _k0
+    , _loc0
+    , _d0
+    } when 'true' ->
+        _ht0
+   end
+'iht.loc'/1 = fun (_s) -> 
+  case _s of
+    { 'mk_set_args'
+    , _ht0
+    , _h0
+    , _v0
+    , _k0
+    , _loc0
+    , _d0
+    } when 'true' ->
+        _h0
+   end
+'iht.k'/1 = fun (_s) -> 
+  case _s of
+    { 'mk_set_args'
+    , _ht0
+    , _h0
+    , _v0
+    , _k0
+    , _loc0
+    , _d0
+    } when 'true' ->
+        _v0
+   end
+'iht.v'/1 = fun (_s) -> 
+  case _s of
+    { 'mk_set_args'
+    , _ht0
+    , _h0
+    , _v0
+    , _k0
+    , _loc0
+    , _d0
+    } when 'true' ->
+        _k0
+   end
+'iht.h'/1 = fun (_s) -> 
+  case _s of
+    { 'mk_set_args'
+    , _ht0
+    , _h0
+    , _v0
+    , _k0
+    , _loc0
+    , _d0
+    } when 'true' ->
+        _loc0
+   end
+'iht.ht'/1 = fun (_s) -> 
+  case _s of
+    { 'mk_set_args'
+    , _ht0
+    , _h0
+    , _v0
+    , _k0
+    , _loc0
+    , _d0
+    } when 'true' ->
+        _d0
+   end
+'iht.prim_set_obligation_1'/2 = fun (_sa, _prim_set0) -> 
+  _sa
+'iht.prim_set_obligation_2'/2 = fun (_sa, _prim_set0) -> 
+  _sa
+'iht.prim_set_obligation_6'/4 = fun (_sa, _prim_set0, _k@, _v@) -> 
+  _sa
+'iht.prim_set_obligation_7'/4 = fun (_sa, _prim_set0, _k@, _v@) -> 
+  _sa
+'iht.prim_set_obligation_13'/5 = fun (_sa, _prim_set0, _k@, _v@, _a) -> 
+  _sa
+'iht.prim_set_obligation_14'/5 = fun (_sa, _prim_set0, _k@, _v@, _a) -> 
+  _sa
+'iht.prim_set_obligation_16'/5 = fun (_sa, _prim_set0, _k@, _v@, _a) -> 
+  _sa
+'iht.prim_set_obligation_17'/5 = fun (_sa, _prim_set0, _k@, _v@, _a) -> 
+  _sa
+'iht.prim_set_obligation_25'/3 = fun (_sa, _prim_set0, _f) -> 
+  _sa
+'iht.prim_set_obligation_26'/3 = fun (_sa, _prim_set0, _f) -> 
+  _sa
+'iht.prim_set_obligation_28'/3 = fun (_sa, _prim_set0, _f) -> 
+  _sa
+'iht.prim_set'/1 = fun (_x) -> 
+  let _prim_set0 = 
+    fun (_sa) -> 
+      call 'Top.iht':'iht.prim_set' (_sa)
+  in let _ht = 
+       call 'Top.iht':'iht.ht' (_x)
+     in case _ht of
+          'ht_none' when 'true' ->
+              {'inl', { 'ht_pair'
+              , call 'Top.iht':'iht.k' (call 'Top.iht':'iht.prim_set_obligation_1'
+                     ( _x
+                     , fun (_sa, _) -> 
+                         apply _prim_set0 (_sa)
+                     ))
+              , call 'Top.iht':'iht.v' (call 'Top.iht':'iht.prim_set_obligation_2'
+                     ( _x
+                     , fun (_sa, _) -> 
+                         apply _prim_set0 (_sa)
+                     ))
+              }}
+          { 'ht_pair'
+          , _v@
+          , _k@
+          } when 'true' ->
+              case call 'erlang':'=:='
+                        ( call 'Top.iht':'iht.k' (_x)
+                        , _v@
+                        ) of
+                'true' when 'true' ->
+                    {'inl', { 'ht_pair'
+                    , call 'Top.iht':'iht.k' (call 'Top.iht':'iht.prim_set_obligation_6'
+                           ( _x
+                           , fun (_sa, _) -> 
+                               apply _prim_set0 (_sa)
+                           , _v@
+                           , _k@
+                           ))
+                    , call 'Top.iht':'iht.v' (call 'Top.iht':'iht.prim_set_obligation_7'
+                           ( _x
+                           , fun (_sa, _) -> 
+                               apply _prim_set0 (_sa)
+                           , _v@
+                           , _k@
+                           ))
+                    }}
+                'false' when 'true' ->
+                    case call 'erlang':'=:='
+                              ( call 'Top.iht':'iht.d' (_x)
+                              , {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', 'O'}}}}}}}}}}}}}}}}
+                              ) of
+                      'true' when 'true' ->
+                          {'inr', _v@}
+                      'false' when 'true' ->
+                          let _f = 
+                            fun (_a) -> 
+                              case call 'Top.iht':'iht.pa_eq_dec'
+                                        ( _a
+                                        , call 'Top.iht':'iht.tup_get'
+                                               ( {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', 'O'}}}}}}}}}}}}}}}}
+                                               , call 'Top.iht':'iht.h' (call 'Top.iht':'iht.prim_set_obligation_13'
+                                                        ( _x
+                                                        , fun (_sa, _) -> 
+                                                            apply _prim_set0 (_sa)
+                                                        , _v@
+                                                        , _k@
+                                                        , _a
+                                                        ))
+                                               , call 'Top.iht':'iht.d' (call 'Top.iht':'iht.prim_set_obligation_14'
+                                                        ( _x
+                                                        , fun (_sa, _) -> 
+                                                            apply _prim_set0 (_sa)
+                                                        , _v@
+                                                        , _k@
+                                                        , _a
+                                                        ))
+                                               )
+                                        ) of
+                                'true' when 'true' ->
+                                    { 'ht_pair'
+                                    , call 'Top.iht':'iht.k' (call 'Top.iht':'iht.prim_set_obligation_16'
+                                           ( _x
+                                           , fun (_sa, _) -> 
+                                               apply _prim_set0 (_sa)
+                                           , _v@
+                                           , _k@
+                                           , _a
+                                           ))
+                                    , call 'Top.iht':'iht.v' (call 'Top.iht':'iht.prim_set_obligation_17'
+                                           ( _x
+                                           , fun (_sa, _) -> 
+                                               apply _prim_set0 (_sa)
+                                           , _v@
+                                           , _k@
+                                           , _a
+                                           ))
+                                    }
+                                'false' when 'true' ->
+                                    case call 'Top.iht':'iht.pa_eq_dec'
+                                              ( _a
+                                              , call 'Top.iht':'iht.tup_get'
+                                                     ( {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', 'O'}}}}}}}}}}}}}}}}
+                                                     , call 'Top.iht':'iht.hash' (_v@)
+                                                     , call 'Top.iht':'iht.d' (_x)
+                                                     )
+                                              ) of
+                                      'true' when 'true' ->
+                                          { 'ht_pair'
+                                          , _v@
+                                          , _k@
+                                          }
+                                      'false' when 'true' ->
+                                          'ht_none'
+                                     end
+                               end
+                          in {'inl', {'ht_bran', _f}}
+                     end
+               end
+          {'ht_bran', _f} when 'true' ->
+              let _k_a = 
+                call 'Top.iht':'iht.tup_get'
+                     ( {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', {'S', 'O'}}}}}}}}}}}}}}}}
+                     , call 'Top.iht':'iht.h' (call 'Top.iht':'iht.prim_set_obligation_25'
+                              ( _x
+                              , fun (_sa, _) -> 
+                                  apply _prim_set0 (_sa)
+                              , _f
+                              ))
+                     , call 'Top.iht':'iht.d' (call 'Top.iht':'iht.prim_set_obligation_26'
+                              ( _x
+                              , fun (_sa, _) -> 
+                                  apply _prim_set0 (_sa)
+                              , _f
+                              ))
+                     )
+              in let _ht0 = 
+                   apply _prim_set0 ({ 'mk_set_args'
+                     , {'S', call 'Top.iht':'iht.d' (_x)}
+                     , call 'Top.iht':'iht.tup_tcons'
+                          ( call 'Top.iht':'iht.d' (_x)
+                          , call 'Top.iht':'iht.loc' (_x)
+                          , _k_a
+                          )
+                     , call 'Top.iht':'iht.k' (_x)
+                     , call 'Top.iht':'iht.v' (call 'Top.iht':'iht.prim_set_obligation_28'
+                            ( _x
+                            , fun (_sa, _) -> 
+                                apply _prim_set0 (_sa)
+                            , _f
+                            ))
+                     , call 'Top.iht':'iht.h' (_x)
+                     , apply _f (_k_a)
+                     })
+                 in case _ht0 of
+                      {'inl', _u} when 'true' ->
+                          let _f@ = 
+                            fun (_a) -> 
+                              case call 'Top.iht':'iht.pa_eq_dec'
+                                        ( _a
+                                        , _k_a
+                                        ) of
+                                'true' when 'true' ->
+                                    _u
+                                'false' when 'true' ->
+                                    apply _f (_a)
+                               end
+                          in {'inl', {'ht_bran', _f@}}
+                      {'inr', _pr} when 'true' ->
+                          {'inr', _pr}
+                     end
+         end
+'iht.get'/2 = fun (_ht0, _k0) -> 
+  call 'Top.iht':'iht.prim_get'
+       ( 'O'
+       , {}
+       , _ht0
+       , _k0
+       , call 'Top.iht':'iht.hash' (_k0)
+       )
+'iht.set'/3 = fun (_ht0, _k0, _v0) -> 
+  call 'Top.iht':'iht.prim_set' ({ 'mk_set_args'
+    , 'O'
+    , {}
+    , _k0
+    , _v0
+    , call 'Top.iht':'iht.hash' (_k0)
+    , _ht0
+    })
+

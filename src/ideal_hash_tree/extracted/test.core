@@ -1,0 +1,16 @@
+module 'test' ['make_test'/2] attributes []
+
+'make_test'/2 = fun (_i, _ht) ->
+  case call 'erlang':'=:=' (_i, 0) of
+    'true' when 'true' -> _ht
+    'false' when 'true' ->
+      let _k = _i in
+      let _v = call 'erlang':'*' (2, _k)
+      in case call 'Top.iht':'iht.set' (_ht, _k, _v) of
+           {'inl', _ht@} when 'true' ->
+             call 'test':'make_test' (call 'erlang':'-' (_i, 1), _ht@)
+           {'inr', _} when 'true' -> _ht
+         end
+  end
+
+end
