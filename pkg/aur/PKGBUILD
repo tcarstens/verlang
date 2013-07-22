@@ -1,0 +1,48 @@
+# Verlang PKGBUILD
+# Derived from a PKGBUILD which bore the following credits:
+#  Maintainer: Baptiste Jonglez <baptiste--aur at jonglez dot org>
+#  Contributor: acieroid
+#  Contributor: spider-mario <spidermario@free.fr>
+#  Contributor: Thomas Dziedzic < gostrc at gmail >
+#  Contributor: George Giorgidze <giorgidze@gmail.com>
+pkgname=coq
+pkgver=8.4pl2
+pkgrel=5
+pkgdesc='Formal proof management system.'
+arch=('i686' 'x86_64')
+url='http://coq.inria.fr/'
+license=('GPL')
+options=('!emptydirs')
+depends=('gtk2' 'ocaml')
+makedepends=('ocaml-findlib' 'lablgtk2' 'camlp5-transitional' 'netpbm' 'hevea' 'texlive-latexextra' 'texlive-fontsextra' 'texlive-pictures')
+source=(
+  "http://coq.inria.fr/distrib/V$pkgver/files/coq-$pkgver.tar.gz"
+  "verlang.patch")
+md5sums=('7fd98da8db35a89b9718333a31af6153'
+         'c7374131533db2f825dee723a9a30145')
+
+build() {
+  cd "coq-$pkgver"
+
+  pwd
+  echo $srcdir/verlang.patch
+
+  patch -up1 -i $srcdir/verlang.patch
+
+  ./configure \
+    -prefix '/usr' \
+    -mandir '/usr/share/man' \
+    -configdir '/etc/xdg/coq/' \
+    -opt \
+    -coqide opt \
+    -usecamlp4 \
+    -with-doc no
+
+  make world
+}
+
+package() {
+  cd "coq-$pkgver"
+
+  make COQINSTALLPREFIX="$pkgdir" install
+}

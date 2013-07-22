@@ -375,3 +375,9 @@ Extraction Inline set_obligation_2.
 End iht.
 
 Extraction Language CoreErlang.
+(* The next generates several extracted modules. Grab the 'Top' module,
+   rename it as 'Top.iht', and save as Top.iht.core. *)
+Recursive Extraction iht.get iht.set.
+
+
+
