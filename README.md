@@ -40,6 +40,16 @@ Our work is highly experimental. We have a prototype extractor which attempts to
 
 It is currently possible to generate Core Erlang which fails with run-time exceptions (if you curry a function, for instance). We are still evolving the extraction theory, and thus there may be other bugs as well. Our goal is to resolve these issues and provide a rigorous implementation.
 
+Example
+----------
+
+The `src/ideal_hash_tree` path contains a model for [Ideal Hash Trees][9] in Coq. This model includes a setter and getter, with the property that the setter is guaranteed to return either (a) a new tree whose behavior under "get" is identical to the original, except at the key which has been set, or (b) another key, distinct from the one provided, whose hash collides with the hash of the given key.
+
+This model is deficient in that it uses lambda abstractions instead of sparse arrays (we will move to sparse arrays Real Soon Now).
+
+Noting that limitation, though, we are able to extract the model to Core Erlang, then compile and load the resulting module into the Erlang shell (`erl`). The `src/ideal_hash_tree` path shows the resulting Core Erlang file and contains instructions on how to experiment with the module.
+
+
 
    [1]: http://coq.inria.fr/ "Coq"
    [2]: http://caml.inria.fr/ "OCaml"
@@ -49,3 +59,4 @@ It is currently possible to generate Core Erlang which fails with run-time excep
    [6]: http://www.ericsson.org/ "Ericsson"
    [7]: http://www.it.uu.se/research/group/hipe/cerl/ "Core Erlang"
    [8]: http://www.pps.univ-paris-diderot.fr/~letouzey/index.fr.html "Pierre Letouzey"
+   [9]: http://lampwww.epfl.ch/papers/idealhashtrees.pdf‎ "Ideal hash trees"
