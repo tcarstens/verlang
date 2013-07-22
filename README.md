@@ -49,6 +49,18 @@ This model is deficient in that it uses lambda abstractions instead of sparse ar
 
 Noting that limitation, though, we are able to extract the model to Core Erlang, then compile and load the resulting module into the Erlang shell (`erl`). The `src/ideal_hash_tree` path shows the resulting Core Erlang file and contains instructions on how to experiment with the module.
 
+Verlang-Coq
+----------
+
+The `pkg/aur` path contains a `PKGBUILD` file for building Verlang-Coq as an Arch Linux package. This `PKGBUILD` is derived from the [usual Coq respoitory in AUR][10], but it applies `src/verlang.patch` first, which adds Core Erlang as an extraction target.
+
+For anyone performing a manual build, simply extract Coq (version 8.4pl2), apply the patch, then build and install as usual.
+
+Future Releases
+----------
+
+We are currently working on the next revision of the extraction facility, which will feature improved support for module extraction and bug fixes relating to the fname/variable dichotomy.
+
 
 
    [1]: http://coq.inria.fr/ "Coq"
@@ -60,3 +72,4 @@ Noting that limitation, though, we are able to extract the model to Core Erlang,
    [7]: http://www.it.uu.se/research/group/hipe/cerl/ "Core Erlang"
    [8]: http://www.pps.univ-paris-diderot.fr/~letouzey/index.fr.html "Pierre Letouzey"
    [9]: http://lampwww.epfl.ch/papers/idealhashtrees.pdf‎ "Ideal hash trees"
+   [10]: https://aur.archlinux.org/packages/coq/
