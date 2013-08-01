@@ -14,7 +14,7 @@ url='http://coq.inria.fr/'
 license=('GPL')
 options=('!emptydirs')
 depends=('gtk2' 'ocaml')
-makedepends=('ocaml-findlib' 'lablgtk2' 'camlp5-transitional' 'netpbm' 'hevea' 'texlive-latexextra' 'texlive-fontsextra' 'texlive-pictures')
+makedepends=('ocaml-findlib' 'lablgtk2')
 source=(
   "http://coq.inria.fr/distrib/V$pkgver/files/coq-$pkgver.tar.gz"
   "verlang.patch")

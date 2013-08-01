@@ -5,188 +5,424 @@ Require Import ExtrOcamlZInt.
 Require Import ExtrOcamlIntConv.
 Require Import ZArith.
 Require Import Ascii.
-
-Require Import OurString.
-
-Module CoreErlang.
-  Require Import String.
-  Require Import MiniML.
-
-  Inductive atom_t: Type := mk_atom: caml_string -> atom_t.
-  Program Definition atom_eq_dec (a: atom_t) (s: string):
-   {a = mk_atom (camlstring_of_coqstring s)} + {a <> mk_atom (camlstring_of_coqstring s)}
-    := match a with
-         mk_atom s' => if caml_string_eq_dec s' (camlstring_of_coqstring s)
-                        then _
-                        else _
-       end.
-  Next Obligation.
-    auto.
-  Defined.
-  Next Obligation.
-    apply right.
-    intro H'.
-    inversion H'.
-    contradiction.
-  Defined.
-
-  Definition integer_t: Type := int.
-  Definition char_t: Set := ascii.
-
-  (* All from Core Erlang 1.0.3 Appendix C
-     The following deviations from the standard have been made:
-     1. We do not support terms which yield multiple values (so we
-        support expr, but not exprs)
-     2. Our function type is either a lambda (as in the standard) *or*
-        is a string which was given to us as an extraction pragma.
-     3. We added a constructor to the term_t inductive for global_reference,
-        which we store as a caml_string..
-     4. We added a global_reference parameter to lit_cons, mirroring
-        MiniML.MLcons. We store this as a caml_string as well.
-     5. Our match clauses do not support multi-valued patterns
-        (mirroring deviation 1).
-     6. We've added a few types of literals that (for some reason?)
-        were not present in the specification, despite being a key
-        part of Core Erlang.
-  *)
-  Inductive module_t: Type
-    := module: atom_t -> list fname_t -> list attr_t -> list def_t -> module_t
-  with fname_t: Type
-    := fname: atom_t -> nat -> fname_t
-  with attr_t: Type
-    := attr: atom_t -> const_t -> attr_t
-  with const_t: Type
-    := const: lit_t -> list const_t -> const_t
-  with  lit_t: Type
-    := lit_int: integer_t -> lit_t
-     (* | lit_float: float_t -> lit_t *)
-     | lit_atom: atom_t -> lit_t
-     | lit_char: char_t -> lit_t
-     | lit_str: caml_string -> lit_t
-     | lit_nil: lit_t
-     | lit_cons: atom_t -> lit_t
-     | lit_tup: lit_t
-  with def_t: Type
-    := def: fname_t -> fun_t -> def_t
-     | def_custom: caml_string -> caml_string -> def_t
-  with fun_t: Type
-    := func: list var_t -> term_t -> fun_t
-  with var_t: Type
-    := var: caml_string -> var_t
-     | var_atom: caml_string -> var_t
-  with term_t: Type
-    := term_var: var_t -> term_t
-     | term_fname: fname_t -> term_t
-     | term_lit: lit_t -> list term_t -> term_t
-     | term_fun: fun_t -> term_t
-     | term_let: var_t -> term_t -> term_t -> term_t
-     | term_case: term_t -> list clause_t -> term_t
-     | term_letrec: list def_t -> term_t -> term_t
-     | term_apply: term_t -> list term_t -> term_t
-     | term_call: term_t -> term_t -> list term_t -> term_t
-     | term_primop: atom_t -> list term_t -> term_t
-     | term_try: term_t -> list var_t -> term_t -> list var_t -> term_t -> term_t
-     | term_recv: list clause_t -> term_t -> term_t -> term_t
-     | term_do: term_t -> term_t -> term_t
-     | term_catch: term_t -> term_t
-     | term_globl: atom_t -> term_t
-     | term_custom: caml_string -> term_t
-  with clause_t: Type
-    := clause: pat_t -> term_t -> term_t -> clause_t
-  with pat_t: Type
-    := pat_var: var_t -> pat_t
-     | pat_lit: lit_t -> list pat_t -> pat_t
-     | pat_alias: var_t -> pat_t -> pat_t.
-End CoreErlang.
-
-
-
-
-
-
-
-
-Require Import Coq.Program.Wf.
+Require Import String.
 Require Import List.
 Import ListNotations.
-Require Import String.
-
-Require Import PP.
-Require Import MiniML.
-Import CoreErlang.
-
-Local Open Scope string_scope.
 
 
-Definition pp_global (k: Common.Kind) (r: Libnames.global_reference): caml_string
-  := if Table.is_inline_custom r
-      then Table.find_custom r
-      else Common.pp_global k r.
+Module Extras.
+  (* Triples come up in MiniML. *)
+  Inductive triple (A B C: Type) := T: A -> B -> C -> triple A B C.
+  Extract Inductive triple => "( * * )" [ "" ].
 
-Axiom id_of_string: caml_string -> Names.identifier.
-Extract Inlined Constant id_of_string => "id_of_string".
-Axiom string_of_id: Names.identifier -> caml_string.
-Extract Inlined Constant string_of_id => "string_of_id".
+  (* OCaml strings. *)
+  Axiom caml_string: Set.
+  Extract Inlined Constant caml_string => "string".
 
-Definition mk_idset (ss: list string): idset
-  := List.fold_right (fun s => idset_add (id_of_string (camlstring_of_coqstring s)))
-                     idset_empty
-                     ss.
+  Axiom caml_string_eq_dec:
+   forall (a b: caml_string),
+    {a = b} + {a <> b}.
+  Extract Constant caml_string_eq_dec => "(fun a -> fun b -> a = b)".
 
+  Axiom str_cast: string -> caml_string.
+  Extract Constant str_cast =>
+    "(fun s ->
+       let r = String.create (List.length s) in
+       let rec fill pos = function
+         | [] -> r
+         | c :: s -> r.[pos] <- c; fill (pos + 1) s
+       in fill 0 s)".
+
+  Program Fixpoint map2 {X Y Z} f (xs: list X) (ys: list Y): list Z
+    := match xs, ys with
+         | cons x xs', cons y ys' => cons (f x y) (map2 f xs' ys')
+         | _, _ => nil
+       end.
+
+  Program Fixpoint map3 {X Y Z W} (f: X -> Y -> Z -> W) xs ys zs: list W
+    := match xs, ys, zs with
+         | cons x xs', cons y ys', cons z zs' => cons (f x y z) (map3 f xs' ys' zs')
+         | _, _, _ => nil
+       end.
+End Extras.
+Import Extras.
+
+
+(* After extracting coreerlang.v, we delete this module from the result.
+ * Its contents are all axioms with "Extract Inlined" directives.
+ *)
+Module DeleteMe.
+  Module Str.
+    Axiom regexp_t: Set.
+
+    Axiom regexp: caml_string -> regexp_t.
+    Extract Inlined Constant regexp => "Str.regexp".
+
+    Axiom reg_split: regexp_t -> caml_string -> list caml_string.
+    Extract Inlined Constant reg_split => "Str.split".
+
+    Axiom global_replace: regexp_t -> caml_string -> caml_string -> caml_string.
+    Extract Inlined Constant global_replace => "Str.global_replace".
+
+    Axiom string_match: regexp_t -> caml_string -> int -> bool.
+    Extract Inlined Constant string_match => "Str.string_match".
+  End Str.
+
+
+  Module Pp.
+    Axiom std_ppcmds: Set.
+
+    Axiom str: caml_string -> std_ppcmds.
+    Extract Inlined Constant str => "Pp.str".
+
+    Axiom fnl: std_ppcmds.
+    Extract Inlined Constant fnl => "(Pp.fnl ())".
+
+    Axiom concat: std_ppcmds -> std_ppcmds -> std_ppcmds.
+    Extract Inlined Constant concat => "(++)".
+
+    Axiom pp_int: int -> std_ppcmds.
+    Extract Inlined Constant pp_int => "Pp.int".
+  End Pp.
+
+
+  Module Libnames.
+    Axiom global_reference: Set.
+  End Libnames.
+
+
+  Module Names.
+    Axiom mod_bound_id: Set.
+
+    Axiom module_path: Set.
+    Axiom string_of_mp: module_path -> caml_string.
+    Extract Inlined Constant string_of_mp => "Names.string_of_mp".
+
+    Axiom identifier: Set.
+    Axiom string_of_id: identifier -> caml_string.
+    Extract Inlined Constant string_of_id => "Names.string_of_id".
+    Axiom id_of_string: caml_string -> identifier.
+    Extract Inlined Constant id_of_string => "Names.id_of_string".
+
+    Axiom label: Set.
+    Axiom module_ident: Set.
+    Axiom dir_path: Set.
+    Axiom kernel_name: Set.
+    Axiom mutual_inductive: Set.
+  End Names.
+
+
+  Module Table.
+    Import Libnames.
+    Import Names.
+
+    Axiom is_custom: global_reference -> bool.
+    Extract Inlined Constant is_custom => "Table.is_custom".
+
+    Axiom is_inline_custom: global_reference -> bool.
+    Extract Inlined Constant is_inline_custom => "Table.is_inline_custom".
+
+    Axiom find_custom: global_reference -> caml_string.
+    Extract Inlined Constant find_custom => "Table.find_custom".
+
+    Axiom modpath_of_r: global_reference -> module_path.
+    Extract Inlined Constant modpath_of_r => "Table.modpath_of_r".
+
+    Axiom current_toplevel: module_path.
+    Extract Inlined Constant current_toplevel => "(Table.current_toplevel ())".
+
+    Axiom base_mp: module_path -> module_path.
+    Extract Inlined Constant base_mp => "Table.base_mp".
+  End Table.
+
+
+  (* Cheap hack so that we can use arrays within our inductives. *)
+  Inductive array (T: Type): Type := make: nat -> T -> array T.
+  Module Array.
+    Axiom map: forall {T T': Type}, (T -> T') -> array T -> array T'.
+    Extract Inlined Constant map => "Array.map".
+
+    Axiom to_list: forall {T}, array T -> list T.
+    Extract Inlined Constant to_list => "Array.to_list".
+
+    Axiom of_list: forall {T}, list T -> array T.
+    Extract Inlined Constant of_list => "Array.of_list".
+
+    Axiom ith: forall {T}, array T -> int -> T.
+    Extract Inlined Constant ith => "(fun x -> fun i -> x.(i))".
+
+    Axiom length: forall {T}, array T -> int.
+    Extract Inlined Constant length => "Array.length".
+  End Array.
+
+
+  Module Idset.
+    Axiom idset: Set.
+
+    Axiom idset_empty: idset.
+    Extract Inlined Constant idset_empty => "Idset.empty".
+
+    Axiom idset_add: Names.identifier -> idset -> idset.
+    Extract Inlined Constant idset_add => "Idset.add".
+  End Idset.
+
+
+  Module Miniml.
+    Import Libnames.
+    Import Names.
+
+    Inductive kill_reason: Set
+     := Ktype: kill_reason
+      | Kother: kill_reason.
+
+    Inductive sign
+     := Keep: sign
+      | Kill: kill_reason -> sign.
+
+    Definition signature := list sign.
+
+    Inductive ml_type: Type
+     := Tarr: ml_type -> ml_type -> ml_type
+      | Tglob: global_reference -> list ml_type -> ml_type
+      | Tvar: int -> ml_type
+      | Tvar': int -> ml_type
+      | Tmeta: ml_meta -> ml_type
+      | Tdummy: kill_reason -> ml_type
+      | Tunknown
+      | Taxiom
+    with ml_meta: Type
+     := Mk_ml_meta: int -> option ml_type -> ml_meta.
+
+    Definition ml_schema: Type := (int * ml_type)%type.
+
+    Inductive inductive_kind: Set
+      := Singleton: inductive_kind
+       | Coinductive: inductive_kind
+       | Standard: inductive_kind
+       | Record: list (option global_reference) -> inductive_kind.
+
+    Record ml_ind_packet: Type
+      := Mk_ml_ind_packet
+          { ip_typename: identifier
+          ; ip_consnames: list identifier
+          ; ip_logical: bool
+          ; ip_sign: signature
+          ; ip_vars: list signature
+          ; ip_types: list (list ml_type)
+          }.
+
+    Inductive equiv: Type
+      := NoEquiv: equiv
+       | Equiv: kernel_name -> equiv
+       | RenEquiv: caml_string -> equiv.
+
+    Record ml_ind: Type
+      := ind_kind: inductive_kind -> ml_ind
+       | ind_nparams: int -> ml_ind
+       | ind_packets: list ml_ind_packet -> ml_ind
+       | ind_equiv: equiv -> ml_ind.
+
+    Inductive ml_ident: Type
+      := Dummpy: ml_ident
+       | Id: identifier -> ml_ident
+       | Tmp: identifier -> ml_ident.
+
+    Inductive ml_pattern: Type
+      := Pcons: global_reference -> list ml_pattern -> ml_pattern
+       | Ptuple: list ml_pattern -> ml_pattern
+       | Prel: nat -> ml_pattern
+       | Pwild: ml_pattern
+       | Pusual: global_reference -> ml_pattern.
+
+    Inductive ml_ast: Type
+      := MLrel: nat -> ml_ast
+       | MLapp: ml_ast -> list ml_ast -> ml_ast
+       | MLlam: ml_ident -> ml_ast -> ml_ast
+       | MLletin: ml_ident -> ml_ast -> ml_ast -> ml_ast
+       | MLglob: global_reference -> ml_ast
+       | MLcons: ml_type -> global_reference -> list ml_ast -> ml_ast
+       | MLtuple: list ml_ast -> ml_ast
+       | MLcase: ml_type -> ml_ast -> array (triple (list ml_ident) ml_pattern ml_ast) -> ml_ast
+       | MLfix: nat -> array identifier -> array ml_ast -> ml_ast
+          (* In ``MLfix k xs e'' we require 0 <= k < Array.length xs *)
+       | MLexn: caml_string -> ml_ast
+       | MLdummy: ml_ast
+       | MLaxiom: ml_ast
+       | MLmagic: ml_ast -> ml_ast.
+
+    Inductive ml_decl: Type
+      := Dind: mutual_inductive -> ml_ind -> ml_decl
+       | Dtype: global_reference -> identifier -> list ml_type -> ml_decl
+       | Dterm: global_reference -> ml_ast -> ml_type -> ml_decl
+       | Dfix: array global_reference -> array ml_ast -> array ml_type -> ml_decl.
+
+    Inductive ml_spec: Type
+      := Sind: mutual_inductive -> ml_ind -> ml_spec
+       | Stype: global_reference -> list identifier -> option ml_type -> ml_spec
+       | Sval: global_reference -> ml_type -> ml_spec.
+
+    Inductive ml_specif: Type
+      := Spec: ml_spec -> ml_specif
+       | Smodule: ml_module_type -> ml_specif
+       | Smodtype: ml_module_type -> ml_specif
+    with ml_module_type: Type
+      := MTident: module_path -> ml_module_type
+       | MTfunsig: mod_bound_id -> ml_module_type -> ml_module_type -> ml_module_type
+       | MTsig: module_path -> ml_module_sig -> ml_module_type
+       | MTwith: ml_module_type -> ml_with_declaration -> ml_module_type
+    with ml_with_declaration: Type
+      := ML_With_type: list identifier -> list identifier -> ml_type -> ml_with_declaration
+       | ML_With_module: list identifier -> module_path -> ml_with_declaration
+    with ml_module_sig: Type
+      := Mk_ml_module_sig: list (label * ml_specif) -> ml_module_sig.
+
+    Inductive ml_structure_elem: Type
+      := SEdecl: ml_decl -> ml_structure_elem
+       | SEmodule: ml_module -> ml_structure_elem
+       | SEmodtype: ml_module_type -> ml_structure_elem
+    with ml_module_expr: Type
+      := MEident: module_path -> ml_module_expr
+       | MEfunctor: mod_bound_id -> ml_module_type -> ml_module_expr -> ml_module_expr
+       | MEstruct: module_path -> ml_module_structure -> ml_module_expr
+       | MEapply: ml_module_expr -> ml_module_expr -> ml_module_expr
+    with ml_module: Type
+      := Mk_ml_module: ml_module_expr -> ml_module_type -> ml_module
+    with ml_module_structure: Type
+      := Mk_ml_module_structure: list (label * ml_structure_elem) -> ml_module_structure.
+
+    Extract Inductive ml_module_structure => "(label * ml_structure_elem) list" [ "" ].
+    Extract Inductive ml_module => "ml_module" [ "" ].
+    Axiom ml_mod_expr: ml_module -> ml_module_expr.
+    Extract Inlined Constant ml_mod_expr => "(function e -> e.ml_mod_expr)".
+
+    Definition ml_structure: Type := list (module_path * ml_module_structure).
+    Definition ml_signature: Type := list (module_path * ml_module_sig).
+
+    Record unsafe_needs: Set
+      := Mk_unsafe_needs
+          { mldummy: bool
+          ; tdummy: bool
+          ; tunknown: bool
+          ; magic: bool
+          }.
+
+    Record language_descr: Type
+      := Mk_language_descr
+          { keywords: Idset.idset
+          ; file_suffix: caml_string
+          ; preamble:     (* preamble for modules *)
+             identifier            (* module name *)
+             -> list module_path   (* module imports *)
+             -> unsafe_needs       (* casts which are used in the module *)
+             -> Pp.std_ppcmds
+          ; pp_struct:    (* render-er of modules *)
+             ml_structure -> Pp.std_ppcmds
+          ; sig_suffix:   (* suffix for header files (e.g., .mli) *)
+             option caml_string
+          ; sig_preamble: (* preamble for header files *)
+             identifier -> list module_path -> unsafe_needs -> Pp.std_ppcmds
+          ; pp_sig:       (* render-er of header files *)
+             ml_signature -> Pp.std_ppcmds
+          ; pp_decl:      (* render-er of decl's *)
+             ml_decl -> Pp.std_ppcmds
+          }.
+  End Miniml.
+
+  Module Mlutil.
+    Import Names.
+    Import Miniml.
+
+    Axiom id_of_mlid: ml_ident -> identifier.
+    Extract Inlined Constant id_of_mlid => "id_of_mlid".
+
+    Axiom collect_lams: ml_ast -> (list ml_ident * ml_ast).
+    Extract Inlined Constant collect_lams => "collect_lams".
+  End Mlutil.
+End DeleteMe.
+
+
+(* Basic types in Core Erlang *)
+Definition atom_t: Set := caml_string.
+Definition integer_t: Type := int.
+Definition char_t: Set := ascii.
+
+Definition atom_eq_str_dec (a: atom_t) (s: string): {a = str_cast s} + {a <> str_cast s}
+  := caml_string_eq_dec a (str_cast s).
+
+
+(* Function name (with arity) *)
+Inductive fname_t: Set
+  := Fname: atom_t -> nat -> fname_t.
+
+(* Literals *)
+Inductive lit_t: Set
+  := Lit_atom: atom_t -> lit_t
+   | Lit_str: caml_string -> lit_t
+   | Lit_cons: caml_string -> lit_t
+   | Lit_nil: lit_t
+   | Lit_tup: lit_t.
+
+(* Variables *)
+Inductive var_t: Set
+  := Var: caml_string -> var_t.
+
+(* Patterns *)
+Inductive pat_t: Set
+  := Pat_var: var_t -> pat_t
+   | Pat_lit: lit_t -> list pat_t -> pat_t
+   | Pat_alias: var_t -> pat_t -> pat_t.
+
+(* Modules and primops *)
+Definition modname_t: Set := atom_t.
+Definition primop_t: Set := atom_t.
+
+(* Definitions, functions, terms, and clauses *)
+Inductive def_t: Type
+  := Def: fname_t -> fun_t -> def_t
+   | Def_custom: caml_string -> caml_string -> def_t
+ with fun_t: Type
+  := Func: list var_t -> term_t -> fun_t
+ with term_t: Type
+  := Term_var: var_t -> term_t
+   | Term_fname: fname_t -> term_t
+   | Term_lit: lit_t -> list term_t -> term_t
+   | Term_fun: fun_t -> term_t
+   | Term_let: var_t -> term_t -> term_t -> term_t
+   | Term_letrec: list def_t -> term_t -> term_t
+   | Term_case: term_t -> list clause_t -> term_t
+   | Term_apply: term_t -> list term_t -> term_t
+   | Term_call: modname_t -> fname_t -> list term_t -> term_t
+   | Term_primop: primop_t -> list term_t -> term_t
+   | Term_recv: list clause_t -> term_t -> term_t -> term_t
+   | Term_globl: atom_t -> term_t
+   | Term_custom: caml_string -> term_t
+ with clause_t: Type
+  := Clause: pat_t -> term_t -> term_t -> clause_t.
+
+(* Modules *)
+Inductive module_t: Type
+  := Module: modname_t -> list fname_t -> list def_t -> module_t.
+
+
+(* Now we get into the bulk of the extractor. *)
+Import DeleteMe.Idset.
+Import DeleteMe.Names.
+
+Definition file_suffix: caml_string := str_cast ".core".
+Definition sig_suffix := None (A:=caml_string).
+
+Open Scope string_scope.
 Definition keywords: idset
-  := mk_idset [ "after" ; "apply" ; "attributes"
-              ; "call" ; "case" ; "catch"
-              ; "do" ; "end" ; "fun"
-              ; "in" ; "let" ; "letrec"
-              ; "module" ; "of" ; "primop"
-              ; "receive" ; "try" ; "when"
-              ; "_wc"
-              ].
-
-Definition file_suffix: caml_string := camlstring_of_coqstring ".core".
-Definition sig_suffix := Some (camlstring_of_coqstring ".hrl").
-
-(*
-Program Fixpoint collect_lams (t: Miniml.ml_ast): (list Miniml.ml_ident * Miniml.ml_ast)
-  := match t with
-       | Miniml.MLlam v t' =>
-          let cl := collect_lams t'
-          in (cons v (fst cl), (snd cl))
-       | _ => (nil, t)
-     end.
-
-(* The following is a technical lemma which comes in handy when
-   performing induction on an ml_ast, but where the induction may
-   transform the ml_ast using collect_lams. *)
-Lemma collect_lams_reduces_depth:
-  forall t, Miniml.ast_depth (snd (collect_lams t)) <= Miniml.ast_depth t.
-Proof.
-  intros.
-  induction t.
-  + simpl ; omega. + simpl ; omega.
-  + simpl ; omega. + simpl ; omega.
-  + simpl ; omega. + simpl ; omega.
-  + simpl ; omega. + simpl ; omega.
-  + simpl ; omega. + simpl ; omega.
-  + simpl ; omega. + simpl ; omega.
-  + simpl ; omega.
-Qed.
-*)
-
-Axiom collect_lams_reduces_depth:
-  forall t, Miniml.ast_depth (snd (Mlutil.collect_lams t)) <= Miniml.ast_depth t.
-
-Program Fixpoint map2 {X Y Z} f (xs: list X) (ys: list Y): list Z
-  := match xs, ys with
-       | cons x xs', cons y ys' => cons (f x y) (map2 f xs' ys')
-       | _, _ => nil
-     end.
-
-Program Fixpoint map3 {X Y Z W} (f: X -> Y -> Z -> W) xs ys zs: list W
-  := match xs, ys, zs with
-       | cons x xs', cons y ys', cons z zs' => cons (f x y z) (map3 f xs' ys' zs')
-       | _, _, _ => nil
-     end.
+  := List.fold_right (fun s => idset_add (id_of_string (str_cast s))) idset_empty
+      [ "after" ; "apply" ; "attributes"
+      ; "call" ; "case" ; "catch"
+      ; "do" ; "end" ; "fun"
+      ; "in" ; "let" ; "letrec"
+      ; "module" ; "of" ; "primop"
+      ; "receive" ; "try" ; "when"
+      ; "_wc"
+      ].
+Close Scope string_scope.
 
 Program Fixpoint extr_pat (e: Common.env) (p: Miniml.ml_pattern) (ids: list Names.identifier): pat_t
   := match p with
